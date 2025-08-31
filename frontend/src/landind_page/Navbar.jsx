@@ -50,7 +50,7 @@ function Navbar() {
                 </Link>
               </li>
                <li class="nav-item">
-                <a class="nav-link active" href="  http://localhost:5174/" target="_blank">
+                <a class="nav-link active" href=" https://tradex-dashboard-b8rv.onrender.com/" target="_blank">
                   Dashboard
                 </a>
               </li>

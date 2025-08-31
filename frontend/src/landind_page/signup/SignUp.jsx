@@ -1,5 +1,5 @@
 import React from 'react';
-import Open from './open';
+import Open from './Open';
 import SignUpPage from './SignUpPage';
 function SignUp () {
     return ( 

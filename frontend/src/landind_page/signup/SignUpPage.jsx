@@ -33,7 +33,7 @@ function SignUpPage() {
           <button className="btn btn-primary w-100 mb-3">Get OTP</button>
 
           <p className="text-muted small mb-0">
-            By proceeding, you agree to the Zerodha
+            By proceeding, you agree to the TradeX
             <a href="#"> terms</a> & <a href="#">privacy policy</a>
           </p>
         </div>

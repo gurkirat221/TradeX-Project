@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 function Navbar() {
   return (
     
-      <nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom  " style={{backgroundColor:"#e3f2fd"}}>
+      <nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom fixed-top  " style={{backgroundColor:"#e3f2fd"}}>
         <div class="container p-2">
           <Link class="navbar-brand" to="/">
             <img src="media/images/TradeXlogo.png" alt="logo" style={{width:"50%"}}></img>

@@ -1,7 +1,7 @@
 import React from "react";
 function Hero() {
   return (
-    <div className="container mt-4">
+    <div className="container mt-5">
       <div className="row p-5 mb-4">
         <h1 className="fs-4 text-center">
           We pioneered the discount broking model in India.<br></br> Now, we are
@@ -9,7 +9,7 @@ function Hero() {
         </h1>
       </div>
 
-      <div className="row p-5 mt-4 bordrt-top text-muted">
+      <div className="row p-5 mt-3 bordrt-top text-muted">
         <div className="col-6 p-5">
           <p>
             We kick-started operations on the 15th of August, 2010 with the goal

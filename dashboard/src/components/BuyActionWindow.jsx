@@ -1,22 +1,19 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-
 import axios from "axios";
-
 import GeneralContext from "./GeneralContext";
-
 import "./BuyActionWindow.css";
 
-const BuyActionWindow = ({ uid }) => {
+const BuyActionWindow = ({ uid, mode = "BUY" }) => {
   const [stockQuantity, setStockQuantity] = useState(1);
   const [stockPrice, setStockPrice] = useState(0.0);
 
-  const handleBuyClick = () => {
-    axios.post(" https://tradex-backend-qfh6.onrender.com/newOrder", {
+  const handleOrderClick = () => {
+    axios.post("https://tradex-backend-qfh6.onrender.com/newOrder", {
       name: uid,
       qty: stockQuantity,
       price: stockPrice,
-      mode: "BUY",
+      mode: mode,   // BUY or SELL
     });
 
     GeneralContext.closeBuyWindow();
@@ -57,8 +54,11 @@ const BuyActionWindow = ({ uid }) => {
       <div className="buttons">
         <span>Margin required ₹140.65</span>
         <div>
-          <Link className="btn btn-blue" onClick={handleBuyClick}>
-            Buy
+          <Link
+            className={`btn ${mode === "BUY" ? "btn-blue" : "btn-red"}`}
+            onClick={handleOrderClick}
+          >
+            {mode === "BUY" ? "Buy" : "Sell"}
           </Link>
           <Link to="" className="btn btn-grey" onClick={handleCancelClick}>
             Cancel

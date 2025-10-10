@@ -26,9 +26,25 @@ app.use(cors({
   origin: [
     "http://localhost:5173",
     "https://tradex-dashboard.netlify.app",
-    "https://tradex-dashboard.netlify.app/"
+    "https://tradex-dashboard.netlify.app/",
+    "https://tradexapp.netlify.app",
+    "https://tradexapp.netlify.app/"
   ],
+  methods: ["GET", "POST", "DELETE", "PUT", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
   credentials: false,
+}));
+// Explicit OPTIONS handler for preflight
+app.options("*", cors({
+  origin: [
+    "http://localhost:5173",
+    "https://tradex-dashboard.netlify.app",
+    "https://tradex-dashboard.netlify.app/",
+    "https://tradexapp.netlify.app",
+    "https://tradexapp.netlify.app/"
+  ],
+  methods: ["GET", "POST", "DELETE", "PUT", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 }));
 app.use(bodyParser.json());
 // Attach userId from JWT if Authorization: Bearer <token> is provided

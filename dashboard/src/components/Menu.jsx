@@ -17,9 +17,11 @@ const Menu = () => {
   const menuClass = "menu";
   const activeMenuClass = "menu selected";
 
+  const username = typeof window !== 'undefined' ? localStorage.getItem("username") : null;
+  const initials = username ? username.trim().split(/\s+/).map(s => s[0]?.toUpperCase()).slice(0,2).join("") : "ZU";
+
   return (
     <div className="menu-container">
-      <img src="/media/logo.png" style={{ width: "50px" }} />
       <div className="menus">
         <ul>
           <li>
@@ -29,7 +31,7 @@ const Menu = () => {
               onClick={() => handleMenuClick(0)}
             >
               <p className={selectedMenu === 0 ? activeMenuClass : menuClass}>
-                Dashboard
+                📊 Dashboard
               </p>
             </Link>
           </li>
@@ -40,7 +42,7 @@ const Menu = () => {
               onClick={() => handleMenuClick(1)}
             >
               <p className={selectedMenu === 1 ? activeMenuClass : menuClass}>
-                Orders
+                📋 Orders
               </p>
             </Link>
           </li>
@@ -51,7 +53,7 @@ const Menu = () => {
               onClick={() => handleMenuClick(2)}
             >
               <p className={selectedMenu === 2 ? activeMenuClass : menuClass}>
-                Holdings
+                💼 Holdings
               </p>
             </Link>
           </li>
@@ -62,7 +64,7 @@ const Menu = () => {
               onClick={() => handleMenuClick(3)}
             >
               <p className={selectedMenu === 3 ? activeMenuClass : menuClass}>
-                Positions
+                📈 Positions
               </p>
             </Link>
           </li>
@@ -73,7 +75,7 @@ const Menu = () => {
               onClick={() => handleMenuClick(4)}
             >
               <p className={selectedMenu === 4 ? activeMenuClass : menuClass}>
-                Funds
+                💰 Funds
               </p>
             </Link>
           </li>
@@ -84,16 +86,11 @@ const Menu = () => {
               onClick={() => handleMenuClick(6)}
             >
               <p className={selectedMenu === 6 ? activeMenuClass : menuClass}>
-                Apps
+                🔧 Apps
               </p>
             </Link>
           </li>
         </ul>
-        <hr />
-        <div className="profile" onClick={handleProfileClick}>
-          <div className="avatar">ZU</div>
-          <p className="username">USERID</p>
-        </div>
       </div>
     </div>
   );

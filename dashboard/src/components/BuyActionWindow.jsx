@@ -9,12 +9,21 @@ const BuyActionWindow = ({ uid, mode = "BUY" }) => {
   const [stockPrice, setStockPrice] = useState(0.0);
 
   const handleOrderClick = () => {
-    axios.post("https://tradex-backend-qfh6.onrender.com/newOrder", {
-      name: uid,
-      qty: stockQuantity,
-      price: stockPrice,
-      mode: mode,   // BUY or SELL
-    });
+    const userId = localStorage.getItem("userId");
+    const token = localStorage.getItem("authToken");
+    axios.post(
+      "http://localhost:8080/newOrder",
+      {
+        name: uid,
+        qty: Number(stockQuantity),
+        price: Number(stockPrice),
+        mode: mode,   // BUY or SELL
+        userId
+      },
+      {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      }
+    );
 
     GeneralContext.closeBuyWindow();
   };

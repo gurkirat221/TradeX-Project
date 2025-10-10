@@ -1,8 +1,18 @@
-import React from "react";
-
-import { positions } from "../data/data";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
 const Positions = () => {
+  const [positions, setPositions] = useState([]);
+
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    const userId = localStorage.getItem("userId");
+    axios.get("http://localhost:8080/allPositions", {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      params: userId ? { userId } : {}
+    }).then((res) => setPositions(res.data));
+  }, []);
+
   return (
     <>
       <h3 className="title">Positions ({positions.length})</h3>
@@ -10,7 +20,6 @@ const Positions = () => {
       <div className="order-table">
         <table>
           <tr>
-            <th>Product</th>
             <th>Instrument</th>
             <th>Qty.</th>
             <th>Avg.</th>
@@ -27,7 +36,6 @@ const Positions = () => {
 
             return (
               <tr key={index}>
-                <td>{stock.product}</td>
                 <td>{stock.name}</td>
                 <td>{stock.qty}</td>
                 <td>{stock.avg.toFixed(2)}</td>

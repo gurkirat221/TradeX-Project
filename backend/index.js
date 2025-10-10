@@ -6,8 +6,11 @@ const url = process.env.MONGO_URL;
 const HoldingModel  = require("./model/HoldingModel");
 const PositionsModel  = require("./model/PositionsModel");
 const OrdersModel=require("./model/OrdersModel");
+const UserModel=require("./model/UserModel");
 const bodyParser=require("body-parser")
 const cors=require("cors");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 const app = express();
 app.listen(PORT, () => {
   console.log("App started");
@@ -16,6 +19,21 @@ app.listen(PORT, () => {
 });
 app.use(cors());
 app.use(bodyParser.json());
+// Attach userId from JWT if Authorization: Bearer <token> is provided
+function attachUserFromAuthHeader(req, res, next) {
+  const authHeader = req.headers.authorization || req.headers.Authorization;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    const token = authHeader.split(" ")[1];
+    try {
+      const payload = jwt.verify(token, process.env.JWT_SECRET_KEY);
+      if (payload && payload.id) {
+        req.userId = payload.id;
+      }
+    } catch (e) {}
+  }
+  next();
+}
+app.use(attachUserFromAuthHeader);
 // app.get("/addHoldings", async (req, res) => {
 //   let tempHoldings = [
 //     {
@@ -179,28 +197,155 @@ app.use(bodyParser.json());
 //     res.send("Done");
 // })
 app.get("/allHoldings",async(req,res)=>{
-    let allHoldings=await HoldingModel.find({})
-    res.json(allHoldings);
-
+    try {
+      let allHoldings = await HoldingModel.find({});
+      if (!allHoldings || allHoldings.length === 0) {
+        const samples = [
+          { name: "INFY", qty: 2, avg: 1350.5, price: 1555.45, net: "+15.18%", day: "-1.60%" },
+          { name: "HDFCBANK", qty: 1, avg: 1383.4, price: 1522.35, net: "+10.04%", day: "+0.11%" },
+          { name: "ITC", qty: 5, avg: 202.0, price: 207.9, net: "+2.92%", day: "+0.80%" },
+          { name: "RELIANCE", qty: 1, avg: 2193.7, price: 2112.4, net: "-3.71%", day: "+1.44%" },
+        ];
+        await HoldingModel.insertMany(samples);
+        allHoldings = await HoldingModel.find({});
+      }
+      res.json(allHoldings);
+    } catch (e) {
+      res.status(500).send("Server error");
+    }
+})
+app.post("/seedHoldings", async (req, res) => {
+  try {
+    if (!req.userId) {
+      return res.status(401).json({ message: "Unauthorized: token required" });
+    }
+    const existing = await HoldingModel.findOne({ userId: req.userId });
+    if (existing) {
+      return res.status(400).json({ message: "Holdings already exist for this user" });
+    }
+    const samples = [
+      { name: "INFY", qty: 2, avg: 1350.5, price: 1555.45, net: "+15.18%", day: "-1.60%" },
+      { name: "HDFCBANK", qty: 1, avg: 1383.4, price: 1522.35, net: "+10.04%", day: "+0.11%" },
+      { name: "ITC", qty: 5, avg: 202.0, price: 207.9, net: "+2.92%", day: "+0.80%" },
+      { name: "RELIANCE", qty: 1, avg: 2193.7, price: 2112.4, net: "-3.71%", day: "+1.44%" },
+    ].map(h => ({ ...h, userId: req.userId }));
+    await HoldingModel.insertMany(samples);
+    res.json({ message: "Seeded holdings for user" });
+  } catch (e) {
+    res.status(500).json({ message: "Failed to seed holdings" });
+  }
 })
 app.get("/allPositions",async(req,res)=>{
-    let allPositions=await PositionsModel.find({})
-    res.json(allPositions);
-
+    try {
+      let allPositions=await PositionsModel.find({});
+      if (!allPositions || allPositions.length === 0) {
+        const samples = [
+          { name: "INFY", qty: 1, avg: 1350.5, price: 1555.45, net: "+15.18%", day: "-1.60%", isLoss: false },
+          { name: "HDFCBANK", qty: 2, avg: 1383.4, price: 1522.35, net: "+10.04%", day: "+0.11%", isLoss: false },
+        ];
+        await PositionsModel.insertMany(samples);
+        allPositions = await PositionsModel.find({});
+      }
+      res.json(allPositions);
+    } catch (e) {
+      res.status(500).send("Server error");
+    }
 })
 app.post("/newOrder",async(req,res)=>{
+    if (!req.userId) {
+      return res.status(401).json({ message: "Unauthorized: token required" });
+    }
     let newOrder=new OrdersModel({
-    name: req.body.name,
-    qty: req.body.qty,
-    price: req.body.price,
-    mode:req.body.mode,
-    
+      name: req.body.name,
+      qty: req.body.qty,
+      price: req.body.price,
+      mode:req.body.mode,
+      userId: req.userId,
     });
-    newOrder.save();
+    await newOrder.save();
     res.send("order saved");
 
 })
 app.get("/allOrders",async(req,res)=>{
-    let allOrders=await OrdersModel.find({});
+    if (!req.userId) {
+      return res.status(401).json({ message: "Unauthorized: token required" });
+    }
+    const filter = { userId: req.userId };
+    let allOrders=await OrdersModel.find(filter);
     res.json(allOrders)
 })
+app.delete("/order/:id", async (req, res) => {
+  if (!req.userId) {
+    return res.status(401).json({ message: "Unauthorized: token required" });
+  }
+  const id = req.params.id;
+  const doc = await OrdersModel.findById(id);
+  if (!doc) return res.status(404).json({ message: "Order not found" });
+  if (doc.userId && String(doc.userId) !== String(req.userId)) {
+    return res.status(403).json({ message: "Forbidden" });
+  }
+  await OrdersModel.deleteOne({ _id: id });
+  res.json({ message: "Order deleted" });
+})
+app.post("/signup", async (req, res) => {
+  const { username, password, email } = req.body;
+  try {
+    // Check if user exists
+    const existingUser = await UserModel.findOne({ username });
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists!" });
+    }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Save new user
+    const newUser = new UserModel({
+      username,
+      password: hashedPassword,
+      email,
+    });
+    await newUser.save();
+
+    // Create JWT
+    const token = jwt.sign(
+      { id: newUser._id },
+      process.env.JWT_SECRET_KEY,
+      { expiresIn: "1h" }
+    );
+
+    res.json({ token, userId: newUser._id, username: newUser.username, email: newUser.email });
+  } catch (err) {
+    console.error("Error during signup : ", err.message);
+    res.status(500).send("Server error");
+  }
+});
+app.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    // Find user by email
+    const user = await UserModel.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid email or password" });
+    }
+
+    // Compare password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid email or password" });
+    }
+
+    // Create JWT
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET_KEY,
+      { expiresIn: "1h" }
+    );
+
+    res.json({ token, userId: user._id, email: user.email, username: user.username });
+  } catch (err) {
+    console.error("Error during login:", err.message);
+    res.status(500).send("Server error");
+  }
+});

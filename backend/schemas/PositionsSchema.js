@@ -6,7 +6,7 @@ const PositionsSchema=new Schema({
     price: Number,
     net: String,
     day: String,
-    isLoss:Boolean
-
+    isLoss:Boolean,
+    userId: String,
 })
 module.exports=PositionsSchema;

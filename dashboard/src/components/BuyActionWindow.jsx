@@ -12,7 +12,7 @@ const BuyActionWindow = ({ uid, mode = "BUY" }) => {
     const userId = localStorage.getItem("userId");
     const token = localStorage.getItem("authToken");
     axios.post(
-      "http://localhost:8080/newOrder",
+      "https://tradex-backend-qfh6.onrender.com/newOrder",
       {
         name: uid,
         qty: Number(stockQuantity),

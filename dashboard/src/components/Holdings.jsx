@@ -12,7 +12,7 @@ const Holdings = () => {
       const token = localStorage.getItem("authToken");
       const userId = localStorage.getItem("userId");
       try {
-        const res = await axios.get("http://localhost:8080/allHoldings", {
+        const res = await axios.get("https://tradex-backend-qfh6.onrender.com/allHoldings", {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
           params: userId ? { userId } : {}
         });
@@ -28,11 +28,11 @@ const Holdings = () => {
     const token = localStorage.getItem("authToken");
     try {
       await axios.post(
-        "http://localhost:8080/seedHoldings",
+        "https://tradex-backend-qfh6.onrender.com/seedHoldings",
         {},
         { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       );
-      const res = await axios.get("http://localhost:8080/allHoldings", {
+      const res = await axios.get("https://tradex-backend-qfh6.onrender.com/allHoldings", {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       setAllHoldings(res.data);

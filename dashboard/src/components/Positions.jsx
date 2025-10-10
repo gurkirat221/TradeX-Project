@@ -7,7 +7,7 @@ const Positions = () => {
   useEffect(() => {
     const token = localStorage.getItem("authToken");
     const userId = localStorage.getItem("userId");
-    axios.get("http://localhost:8080/allPositions", {
+    axios.get("https://tradex-backend-qfh6.onrender.com/allPositions", {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
       params: userId ? { userId } : {}
     }).then((res) => setPositions(res.data));

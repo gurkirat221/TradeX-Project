@@ -7,7 +7,7 @@ function Navbar() {
   const [token, setToken] = useState(() => (typeof window !== 'undefined' && localStorage.getItem('authToken')) || "");
   const dashboardHref = useMemo(() => {
     const u = encodeURIComponent(username || "");
-    return `http://localhost:5173/?token=${token || ''}&userId=${userId || ''}&username=${u}`;
+    return `https://tradex-dashboard.netlify.app/?token=${token || ''}&userId=${userId || ''}&username=${u}`;
   }, [token, userId, username]);
   useEffect(() => {
     const syncAuth = () => {
@@ -43,14 +43,14 @@ function Navbar() {
   };
   return (
     
-      <nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom fixed-top  " style={{backgroundColor:"#e3f2fd"}}>
-        <div class="container p-2">
-          <Link class="navbar-brand" to="/">
+      <nav className="navbar navbar-expand-lg bg-body-tertiary border-bottom fixed-top  " style={{backgroundColor:"#e3f2fd"}}>
+        <div className="container p-2">
+          <Link className="navbar-brand" to="/">
             <img src="media/images/TradeXlogo.png" alt="logo" style={{width:"50%"}}></img>
             {/* <h1 style={{color: "#0d6efd", fontSize:"30px"}}>TradeX</h1> */}
           </Link>
           <button
-            class="navbar-toggler"
+            className="navbar-toggler"
             type="button"
             data-bs-toggle="collapse"
             data-bs-target="#navbarSupportedContent"
@@ -58,43 +58,43 @@ function Navbar() {
             aria-expanded="false"
             aria-label="Toggle navigation"
           >
-            <span class="navbar-toggler-icon"></span>
+            <span className="navbar-toggler-icon"></span>
           </button>
-          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <div className="collapse navbar-collapse" id="navbarSupportedContent">
             
-            <form class="d-flex" role="search">
-             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <form className="d-flex" role="search">
+             <ul className="navbar-nav me-auto mb-2 mb-lg-0">
               {!isLoggedIn && (
-                <li class="nav-item">
-                  <Link class="nav-link active" aria-current="page" to="/signup">
+                <li className="nav-item">
+                  <Link className="nav-link active" aria-current="page" to="/signup">
                     Signup
                   </Link>
                 </li>
               )}
-              <li class="nav-item">
-                <Link class="nav-link active" to="/about">
+              <li className="nav-item">
+                <Link className="nav-link active" to="/about">
                   About
                 </Link>
               </li>
-               <li class="nav-item">
-                <Link class="nav-link active" to="/product">
+               <li className="nav-item">
+                <Link className="nav-link active" to="/product">
                   Product
                 </Link>
               </li>
-               <li class="nav-item">
-                <Link class="nav-link active" to="/pricing">
+               <li className="nav-item">
+                <Link className="nav-link active" to="/pricing">
                   Pricing
                 </Link>
               </li>
-               <li class="nav-item">
-                <Link class="nav-link active" to="/support">
+               <li className="nav-item">
+                <Link className="nav-link active" to="/support">
                   Support
                 </Link>
               </li>
               {isLoggedIn && (
-                <li class="nav-item">
+                <li className="nav-item">
                   <a
-                    class="nav-link active"
+                    className="nav-link active"
                     href={dashboardHref}
                     target="_blank"
                   >
@@ -103,8 +103,8 @@ function Navbar() {
                 </li>
               )}
               {isLoggedIn && (
-                <li class="nav-item">
-                  <a class="nav-link active" href="#" onClick={handleLogout}>
+                <li className="nav-item">
+                  <a className="nav-link active" href="#" onClick={handleLogout}>
                     Logout
                   </a>
                 </li>

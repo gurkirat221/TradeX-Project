@@ -12,7 +12,7 @@ function SignUpPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const API_BASE = "http://localhost:8080";
+  const API_BASE = "https://tradex-backend-qfh6.onrender.com";
 
   const handleSubmit = async (e) => {
     e.preventDefault();

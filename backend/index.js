@@ -17,7 +17,19 @@ app.listen(PORT, () => {
   mongoose.connect(url);
   console.log("DBconnected");
 });
-app.use(cors());
+// Validate critical envs early
+const JWT_SECRET = process.env.JWT_SECRET_KEY;
+if (!JWT_SECRET) {
+  console.error("JWT_SECRET_KEY is not set. JWT operations will fail until it's configured.");
+}
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://tradex-dashboard.netlify.app",
+    "https://tradex-dashboard.netlify.app/"
+  ],
+  credentials: false,
+}));
 app.use(bodyParser.json());
 // Attach userId from JWT if Authorization: Bearer <token> is provided
 function attachUserFromAuthHeader(req, res, next) {
@@ -25,15 +37,29 @@ function attachUserFromAuthHeader(req, res, next) {
   if (authHeader && authHeader.startsWith("Bearer ")) {
     const token = authHeader.split(" ")[1];
     try {
-      const payload = jwt.verify(token, process.env.JWT_SECRET_KEY);
-      if (payload && payload.id) {
-        req.userId = payload.id;
+      if (!JWT_SECRET) {
+        // Skip verification if secret is missing; user remains unauthenticated
+      } else {
+        const payload = jwt.verify(token, JWT_SECRET);
+        if (payload && payload.id) {
+          req.userId = payload.id;
+        }
       }
     } catch (e) {}
   }
   next();
 }
 app.use(attachUserFromAuthHeader);
+// Health endpoint to quickly check configuration
+app.get("/health", (req, res) => {
+  res.json({
+    ok: true,
+    env: {
+      hasMongoUrl: !!process.env.MONGO_URL,
+      hasJwtSecret: !!JWT_SECRET,
+    },
+  });
+});
 // app.get("/addHoldings", async (req, res) => {
 //   let tempHoldings = [
 //     {
@@ -309,9 +335,12 @@ app.post("/signup", async (req, res) => {
     await newUser.save();
 
     // Create JWT
+    if (!JWT_SECRET) {
+      return res.status(500).json({ message: "Server misconfigured: JWT secret missing" });
+    }
     const token = jwt.sign(
       { id: newUser._id },
-      process.env.JWT_SECRET_KEY,
+      JWT_SECRET,
       { expiresIn: "1h" }
     );
 
@@ -337,9 +366,12 @@ app.post("/login", async (req, res) => {
     }
 
     // Create JWT
+    if (!JWT_SECRET) {
+      return res.status(500).json({ message: "Server misconfigured: JWT secret missing" });
+    }
     const token = jwt.sign(
       { id: user._id },
-      process.env.JWT_SECRET_KEY,
+      JWT_SECRET,
       { expiresIn: "1h" }
     );
 

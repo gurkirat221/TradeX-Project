@@ -8,7 +8,7 @@ const Orders = () => {
   useEffect(() => {
     const token = localStorage.getItem("authToken");
     const userId = localStorage.getItem("userId");
-    axios.get("http://localhost:8080/allOrders", {
+    axios.get("https://tradex-backend-qfh6.onrender.com/allOrders", {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
       params: userId ? { userId } : {}
     }).then((res) => {
@@ -19,7 +19,7 @@ const Orders = () => {
   const refresh = async () => {
     const token = localStorage.getItem("authToken");
     const userId = localStorage.getItem("userId");
-    const res = await axios.get("http://localhost:8080/allOrders", {
+    const res = await axios.get("https://tradex-backend-qfh6.onrender.com/allOrders", {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
       params: userId ? { userId } : {}
     });
@@ -28,7 +28,7 @@ const Orders = () => {
 
   const handleDelete = async (id) => {
     const token = localStorage.getItem("authToken");
-    await axios.delete(`http://localhost:8080/order/${id}`, {
+    await axios.delete(`https://tradex-backend-qfh6.onrender.com/order/${id}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
     refresh();

@@ -1,13 +1,13 @@
 import React from 'react';
 function Awards () {
     return ( 
-       <div className="container mt-5">
-        <div className="row">
-            <div className="col-6 p-5">
-                <img src='/media/images/largestBroker.svg'></img>
+       <div className="container mt-5 awards-section">
+        <div className="row align-items-center">
+            <div className="col-12 col-md-6 p-5 text-center text-md-start">
+                <img src='/media/images/largestBroker.svg' style={{maxWidth:"100%", height:"auto"}}></img>
             </div>
-            <div className="col-6 p-5 mt-3">
-                <h1>Largest stock broker in India</h1>
+            <div className="col-12 col-md-6 p-5 mt-3">
+                <h1 className="display-6 display-md-5">Largest stock broker in India</h1>
                 <p className='mb-5'>2+ million TradeX clients contribute to over 15% of all volumes in India daily by trading and investing in:</p>
                 <div className="row">
                     <div className="col-6">
@@ -38,7 +38,7 @@ function Awards () {
                    </ul>
                     </div>
                 </div>
-                <img src='/media/images/pressLogos.png' style={{width:"90%"}}></img>
+                <img src='/media/images/pressLogos.png' style={{width:"90%", maxWidth:"480px", height:"auto"}}></img>
                 
             </div>
         </div>

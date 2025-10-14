@@ -14,6 +14,7 @@ function Hero() {
           src="media/images/homeHero.png"
           alt="Hero Image"
           className="mb-5"
+          style={{maxWidth:"100%", height:"auto"}}
         ></img>
         <h1 className="mt-5 ">Invest in everthing</h1>
         <p>
@@ -22,7 +23,7 @@ function Hero() {
         </p>
         <button onClick={handleSubmit}
           className="p-2 btn btn-primary fs-5 mb-3"
-          style={{ width: "20%", margin: "0 auto" }}
+          style={{ width: "100%", maxWidth:"280px", margin: "0 auto" }}
         >
           Sign up Now
         </button>

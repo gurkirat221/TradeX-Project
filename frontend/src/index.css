@@ -39,3 +39,39 @@ a{
   border-radius: 10px;
   border: none;
 }
+
+/* Responsive utilities */
+img, video {
+  max-width: 100%;
+  height: auto;
+}
+
+@media (max-width: 992px) {
+  .nav-link{
+    margin-left: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .nav-link{
+    margin-left: 12px;
+  }
+  #supportWrapper{
+    flex-direction: column;
+    gap: 16px;
+    margin: 0 24px;
+  }
+}
+
+@media (max-width: 576px) {
+  .nav-link{
+    margin-left: 8px;
+  }
+  #supportWrapper{
+    margin: 0 16px;
+  }
+  #supportHero input{
+    padding: 14px 16px;
+    font-size: 16px;
+  }
+}

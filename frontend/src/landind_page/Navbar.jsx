@@ -46,7 +46,7 @@ function Navbar() {
       <nav className="navbar navbar-expand-lg bg-body-tertiary border-bottom fixed-top  " style={{backgroundColor:"#e3f2fd"}}>
         <div className="container p-2">
           <Link className="navbar-brand" to="/">
-            <img src="media/images/TradeXlogo.png" alt="logo" style={{width:"50%"}}></img>
+            <img src="media/images/TradeXlogo.png" alt="logo" style={{maxWidth:"160px", width:"40vw", height:"auto"}}></img>
             {/* <h1 style={{color: "#0d6efd", fontSize:"30px"}}>TradeX</h1> */}
           </Link>
           <button

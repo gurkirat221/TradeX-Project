@@ -7,7 +7,7 @@ function Navbar() {
   const [token, setToken] = useState(() => (typeof window !== 'undefined' && localStorage.getItem('authToken')) || "");
   const dashboardHref = useMemo(() => {
     const u = encodeURIComponent(username || "");
-    return `https://tradex-dashboard.netlify.app/?token=${token || ''}&userId=${userId || ''}&username=${u}`;
+    return `https://tradex-dashboard-b8rv.onrender.com/?token=${token || ''}&userId=${userId || ''}&username=${u}`;
   }, [token, userId, username]);
   useEffect(() => {
     const syncAuth = () => {

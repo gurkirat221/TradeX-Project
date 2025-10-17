@@ -12,10 +12,29 @@ const cors=require("cors");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const app = express();
+
+// Instrument Express registration methods to log the path being registered.
+// This helps diagnose `path-to-regexp` errors by printing the offending value.
+const methodsToWrap = ["use", "get", "post", "put", "delete", "patch", "options"];
+methodsToWrap.forEach((m) => {
+  const orig = app[m].bind(app);
+  app[m] = function firstArgLogger() {
+    try {
+      const args = Array.from(arguments);
+      const stringArgs = args.filter(a => typeof a === 'string');
+      const repr = stringArgs.length ? `strings: ${JSON.stringify(stringArgs)}` : `firstArgType: ${typeof args[0]}`;
+      console.log(`[express-register] ${m.toUpperCase()} -> ${repr}`);
+      return orig.apply(null, arguments);
+    } catch (err) {
+      console.error(`[express-register] Error registering ${m.toUpperCase()} with args:`, err && err.message);
+      throw err;
+    }
+  };
+});
+
 app.listen(PORT, () => {
   console.log("App started");
-  mongoose.connect(url);
-  console.log("DBconnected");
+  mongoose.connect(url).then(() => console.log("DBconnected")).catch((e) => console.error("DB connect error:", e && e.message));
 });
 // Validate critical envs early
 const JWT_SECRET = process.env.JWT_SECRET_KEY;
@@ -53,8 +72,40 @@ app.use(
 );
 
 // Make sure preflight requests are handled
-app.options("*", cors());
+// Make sure preflight requests are handled.
+// Avoid registering app.options('*', ...) because certain path strings can trigger
+// path-to-regexp parsing issues in some environments. Instead handle OPTIONS per-request.
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    // Invoke cors middleware for this request to set CORS headers, then end with 204
+    try {
+      const handler = cors();
+      handler(req, res, () => {
+        res.sendStatus(204);
+      });
+    } catch (e) {
+      console.error('Error handling OPTIONS request for CORS:', e && e.message);
+      res.sendStatus(204);
+    }
+  } else {
+    next();
+  }
+});
 app.use(bodyParser.json());
+
+// Helper to register routes defensively so a broken path doesn't crash the process
+function safeRoute(method, path, ...handlers) {
+  try {
+    if (typeof app[method] !== 'function') {
+      console.error(`safeRoute: invalid method ${method} for path ${path}`);
+      return;
+    }
+    app[method](path, ...handlers);
+  } catch (err) {
+    // Log the error and the route that caused it so deployments (e.g., Render) can diagnose
+    console.error(`Failed to register route ${method.toUpperCase()} ${String(path)}:`, err && err.message);
+  }
+}
 // Attach userId from JWT if Authorization: Bearer <token> is provided
 function attachUserFromAuthHeader(req, res, next) {
   const authHeader = req.headers.authorization || req.headers.Authorization;
@@ -75,7 +126,7 @@ function attachUserFromAuthHeader(req, res, next) {
 }
 app.use(attachUserFromAuthHeader);
 // Health endpoint to quickly check configuration
-app.get("/health", (req, res) => {
+safeRoute('get', '/health', (req, res) => {
   res.json({
     ok: true,
     env: {
@@ -246,25 +297,25 @@ app.get("/health", (req, res) => {
 //     });
 //     res.send("Done");
 // })
-app.get("/allHoldings",async(req,res)=>{
-    try {
-      let allHoldings = await HoldingModel.find({});
-      if (!allHoldings || allHoldings.length === 0) {
-        const samples = [
-          { name: "INFY", qty: 2, avg: 1350.5, price: 1555.45, net: "+15.18%", day: "-1.60%" },
-          { name: "HDFCBANK", qty: 1, avg: 1383.4, price: 1522.35, net: "+10.04%", day: "+0.11%" },
-          { name: "ITC", qty: 5, avg: 202.0, price: 207.9, net: "+2.92%", day: "+0.80%" },
-          { name: "RELIANCE", qty: 1, avg: 2193.7, price: 2112.4, net: "-3.71%", day: "+1.44%" },
-        ];
-        await HoldingModel.insertMany(samples);
-        allHoldings = await HoldingModel.find({});
-      }
-      res.json(allHoldings);
-    } catch (e) {
-      res.status(500).send("Server error");
+safeRoute('get', '/allHoldings', async (req, res) => {
+  try {
+    let allHoldings = await HoldingModel.find({});
+    if (!allHoldings || allHoldings.length === 0) {
+      const samples = [
+        { name: "INFY", qty: 2, avg: 1350.5, price: 1555.45, net: "+15.18%", day: "-1.60%" },
+        { name: "HDFCBANK", qty: 1, avg: 1383.4, price: 1522.35, net: "+10.04%", day: "+0.11%" },
+        { name: "ITC", qty: 5, avg: 202.0, price: 207.9, net: "+2.92%", day: "+0.80%" },
+        { name: "RELIANCE", qty: 1, avg: 2193.7, price: 2112.4, net: "-3.71%", day: "+1.44%" },
+      ];
+      await HoldingModel.insertMany(samples);
+      allHoldings = await HoldingModel.find({});
     }
-})
-app.post("/seedHoldings", async (req, res) => {
+    res.json(allHoldings);
+  } catch (e) {
+    res.status(500).send("Server error");
+  }
+});
+safeRoute('post', '/seedHoldings', async (req, res) => {
   try {
     if (!req.userId) {
       return res.status(401).json({ message: "Unauthorized: token required" });
@@ -284,47 +335,47 @@ app.post("/seedHoldings", async (req, res) => {
   } catch (e) {
     res.status(500).json({ message: "Failed to seed holdings" });
   }
-})
-app.get("/allPositions",async(req,res)=>{
-    try {
-      let allPositions=await PositionsModel.find({});
-      if (!allPositions || allPositions.length === 0) {
-        const samples = [
-          { name: "INFY", qty: 1, avg: 1350.5, price: 1555.45, net: "+15.18%", day: "-1.60%", isLoss: false },
-          { name: "HDFCBANK", qty: 2, avg: 1383.4, price: 1522.35, net: "+10.04%", day: "+0.11%", isLoss: false },
-        ];
-        await PositionsModel.insertMany(samples);
-        allPositions = await PositionsModel.find({});
-      }
-      res.json(allPositions);
-    } catch (e) {
-      res.status(500).send("Server error");
+});
+safeRoute('get', '/allPositions', async (req, res) => {
+  try {
+    let allPositions = await PositionsModel.find({});
+    if (!allPositions || allPositions.length === 0) {
+      const samples = [
+        { name: "INFY", qty: 1, avg: 1350.5, price: 1555.45, net: "+15.18%", day: "-1.60%", isLoss: false },
+        { name: "HDFCBANK", qty: 2, avg: 1383.4, price: 1522.35, net: "+10.04%", day: "+0.11%", isLoss: false },
+      ];
+      await PositionsModel.insertMany(samples);
+      allPositions = await PositionsModel.find({});
     }
-})
-app.post("/newOrder",async(req,res)=>{
-    if (!req.userId) {
-      return res.status(401).json({ message: "Unauthorized: token required" });
-    }
-    let newOrder=new OrdersModel({
-      name: req.body.name,
-      qty: req.body.qty,
-      price: req.body.price,
-      mode:req.body.mode,
-      userId: req.userId,
-    });
-    await newOrder.save();
-    res.send("order saved");
+    res.json(allPositions);
+  } catch (e) {
+    res.status(500).send("Server error");
+  }
+});
+safeRoute('post', '/newOrder', async (req, res) => {
+  if (!req.userId) {
+    return res.status(401).json({ message: "Unauthorized: token required" });
+  }
+  let newOrder = new OrdersModel({
+    name: req.body.name,
+    qty: req.body.qty,
+    price: req.body.price,
+    mode: req.body.mode,
+    userId: req.userId,
+  });
+  await newOrder.save();
+  res.send("order saved");
 
-})
-app.get("/allOrders",async(req,res)=>{
-    if (!req.userId) {
-      return res.status(401).json({ message: "Unauthorized: token required" });
-    }
-    const filter = { userId: req.userId };
-    let allOrders=await OrdersModel.find(filter);
-    res.json(allOrders)
-})
-app.delete("/order/:id", async (req, res) => {
+});
+safeRoute('get', '/allOrders', async (req, res) => {
+  if (!req.userId) {
+    return res.status(401).json({ message: "Unauthorized: token required" });
+  }
+  const filter = { userId: req.userId };
+  let allOrders = await OrdersModel.find(filter);
+  res.json(allOrders);
+});
+safeRoute('delete', '/order/:id', async (req, res) => {
   if (!req.userId) {
     return res.status(401).json({ message: "Unauthorized: token required" });
   }
@@ -336,8 +387,8 @@ app.delete("/order/:id", async (req, res) => {
   }
   await OrdersModel.deleteOne({ _id: id });
   res.json({ message: "Order deleted" });
-})
-app.post("/signup", async (req, res) => {
+});
+safeRoute('post', '/signup', async (req, res) => {
   const { username, password, email } = req.body;
   try {
     // Check if user exists
@@ -374,7 +425,7 @@ app.post("/signup", async (req, res) => {
     res.status(500).send("Server error");
   }
 });
-app.post("/login", async (req, res) => {
+safeRoute('post', '/login', async (req, res) => {
   const { email, password } = req.body;
   try {
     // Find user by email

@@ -22,19 +22,38 @@ const JWT_SECRET = process.env.JWT_SECRET_KEY;
 if (!JWT_SECRET) {
   console.error("JWT_SECRET_KEY is not set. JWT operations will fail until it's configured.");
 }
-app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "https://tradex-dashboard.netlify.app",
-    "https://tradex-dashboard.netlify.app/",
-    "https://tradexapp.netlify.app",
-    "https://tradexapp.netlify.app/"
-  ],
-  methods: ["GET", "POST", "DELETE", "PUT", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  optionsSuccessStatus: 204,
-  credentials: false,
-}));
+// Configure allowed origins. Can be overridden with environment variable ALLOWED_ORIGINS
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",").map((s) => s.trim())
+  : [
+      "http://localhost:5173",
+      "https://tradex-dashboard-b8rv.onrender.com",
+      "https://tradex-dashboard-b8rv.onrender.com/",
+      "https://tradexapp.netlify.app",
+      "https://tradexapp.netlify.app/",
+      // Add the frontend origin observed in the CORS error
+      "https://tradex-frontendd.onrender.com",
+    ];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // allow requests with no origin like mobile apps or curl
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf("*") !== -1 || allowedOrigins.indexOf(origin) !== -1) {
+        return callback(null, true);
+      }
+      return callback(new Error("CORS policy: Origin not allowed"), false);
+    },
+    methods: ["GET", "POST", "DELETE", "PUT", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    optionsSuccessStatus: 204,
+    credentials: false,
+  })
+);
+
+// Make sure preflight requests are handled
+app.options("*", cors());
 app.use(bodyParser.json());
 // Attach userId from JWT if Authorization: Bearer <token> is provided
 function attachUserFromAuthHeader(req, res, next) {
